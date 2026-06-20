@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+　<meta charset="UTF-8" />
+<link rel="apple-touch-icon" href="icon.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ゴルフ オリンピック計算アプリ</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #0b6b3a, #0f9b57);
+      color: #222;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .app {
+      max-width: 520px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 26px;
+      margin: 8px 0 4px;
+      color: #0b6b3a;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .section {
+      margin-bottom: 22px;
+      padding: 16px;
+      background: #f4f8f5;
+      border-radius: 18px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #244536;
+    }
+
+    select, input {
+      width: 100%;
+      font-size: 18px;
+      padding: 12px;
+      border: 2px solid #d6e6dc;
+      border-radius: 12px;
+      outline: none;
+      background: white;
+    }
+
+    select:focus, input:focus {
+      border-color: #0f9b57;
+    }
+
+    .player-row, .setting-row {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .setting-row {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .money {
+      font-size: 16px;
+      font-weight: 900;
+      margin-top: 5px;
+    }
+
+    .summary {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #eef7f1;
+      font-size: 14px;
+      line-height: 1.7;
+      color: #244536;
+      font-weight: 700;
+    }
+
+    .small-label {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: 800;
+      background: #0b6b3a;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(11,107,58,0.25);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .reset-btn {
+      margin-top: 10px;
+      background: #777;
+      font-size: 16px;
+      padding: 12px;
+      box-shadow: none;
+    }
+
+    .message-area {
+      display: none;
+      margin: 22px 0 4px;
+      background: #10291d;
+      color: #fff;
+      border-radius: 18px;
+      padding: 12px;
+      overflow: hidden;
+      border: 3px solid #f1c84b;
+    }
+
+    .scroll-message {
+      white-space: nowrap;
+      font-size: 22px;
+      font-weight: 900;
+      animation: flowMessage 10s linear infinite;
+    }
+
+    @keyframes flowMessage {
+      0% {
+        transform: translateX(100%);
+      }
+      100% {
+        transform: translateX(-140%);
+      }
+    }
+
+    .results {
+      margin-top: 24px;
+      display: none;
+    }
+
+    .result-card {
+      display: grid;
+      grid-template-columns: 62px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      border-radius: 18px;
+      background: #f8faf8;
+      border: 2px solid #e4eee8;
+    }
+
+    .rank {
+      font-size: 28px;
+      font-weight: 900;
+      text-align: center;
+      color: #0b6b3a;
+    }
+
+    .name {
+      font-size: 21px;
+      font-weight: 800;
+    }
+
+    .medals {
+      font-size: 13px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .score {
+      font-size: 34px;
+      font-weight: 900;
+      color: #111;
+      min-width: 74px;
+      text-align: right;
+    }
+
+    .negative {
+      color: #d92323;
+    }
+
+    .positive {
+      color: #0b6b3a;
+    }
+
+    .top {
+      background: linear-gradient(135deg, #fff8d8, #ffe082);
+      border: 3px solid #ffb300;
+      position: relative;
+      overflow: visible;
+      animation: winnerPulse 1.5s infinite;
+      box-shadow:
+        0 0 12px rgba(255, 168, 0, 0.85),
+        0 0 26px rgba(255, 72, 0, 0.65),
+        inset 0 0 14px rgba(255, 226, 120, 0.8);
+      margin: 18px 2px 14px;
+      z-index: 1;
+    }
+
+    /* 1位の行の枠線だけを炎のように動かす */
+    .top::before {
+      content: "";
+      position: absolute;
+      inset: -8px;
+      border-radius: 26px;
+      pointer-events: none;
+      z-index: -1;
+      background:
+        linear-gradient(90deg, transparent 0%, #ff2a00 12%, #ff8c00 22%, #fff000 32%, #ff4a00 42%, transparent 54%) top / 240% 8px repeat-x,
+        linear-gradient(90deg, transparent 0%, #ff4a00 12%, #fff000 22%, #ff8c00 32%, #ff2a00 42%, transparent 54%) bottom / 240% 8px repeat-x,
+        linear-gradient(0deg, transparent 0%, #ff2a00 12%, #ff8c00 22%, #fff000 32%, #ff4a00 42%, transparent 54%) left / 8px 240% repeat-y,
+        linear-gradient(0deg, transparent 0%, #ff4a00 12%, #fff000 22%, #ff8c00 32%, #ff2a00 42%, transparent 54%) right / 8px 240% repeat-y;
+      animation: flameBorderMove 0.75s linear infinite;
+      filter:
+        drop-shadow(0 0 5px #ff2a00)
+        drop-shadow(0 0 12px #ff8c00)
+        drop-shadow(0 0 18px #ffd000);
+    }
+
+    .top .rank,
+    .top .name,
+    .top .score {
+      color: #111;
+      -webkit-text-fill-color: #111;
+      text-shadow:
+        0 0 4px rgba(255,255,255,0.45),
+        0 0 8px rgba(255,193,7,0.35);
+    }
+
+    .top .name {
+      font-size: 28px;
+      font-weight: 900;
+    }
+
+    .top .score {
+      font-size: 42px;
+      font-weight: 900;
+      color: #1976d2;
+      -webkit-text-fill-color: #1976d2;
+      text-shadow:
+        0 0 6px rgba(255,255,255,0.75),
+        0 0 12px rgba(33,150,243,0.95),
+        0 0 20px rgba(30,136,229,0.8);
+    }
+
+    @keyframes flameBorderMove {
+      0% {
+        background-position: 0 0, 0 100%, 0 0, 100% 0;
+      }
+      100% {
+        background-position: -260px 0, 260px 100%, 0 260px, 100% -260px;
+      }
+    }
+
+    @keyframes winnerPulse {
+      0% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.012);
+      }
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .note {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #666;
+      margin-top: 14px;
+      background: #fff;
+      border-left: 5px solid #0b6b3a;
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+
+    .error {
+      display: none;
+      color: #d92323;
+      font-weight: 700;
+      margin-top: 10px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>⛳ ゴルフ オリンピック計算</h1>
+    <div class="subtitle">
+      獲得メダル数を入れると、<br>
+      各プレイヤーの最終成績を自動計算します。
+    </div>
+
+    <div class="section">
+      <label for="playerCount">人数</label>
+      <select id="playerCount" onchange="createPlayerInputs()">
+        <option value="2">2人</option>
+        <option value="3">3人</option>
+        <option value="4" selected>4人</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label>精算設定</label>
+      <div class="setting-row">
+        <div>
+          <div class="small-label">1ポイント（円）</div>
+          <input type="number" id="pointRate" value="100" min="0" step="100" inputmode="numeric" />
+        </div>
+        <div>
+          <div class="small-label">負けの下限（円）</div>
+          <input type="number" id="lossLimit" value="0" min="0" step="100" inputmode="numeric" />
+        </div>
+      </div>
+      <div class="note">
+        例：負けの下限が2,000円で、実際の最大負けが3,000円なら、全員のポイントを 2,000 ÷ 3,000 に調整します。
+      </div>
+    </div>
+
+    <div class="section">
+      <label>プレイヤー名と獲得メダル数</label>
+      <div id="players"></div>
+      <div class="error" id="errorMessage">名前・メダル数・精算設定を正しく入力してください。</div>
+    </div>
+
+    <button onclick="calculateResults()">計算する</button>
+    <button class="reset-btn" onclick="resetAll()">リセット</button>
+
+    <div class="message-area" id="messageArea">
+      <div class="scroll-message" id="scrollMessage"></div>
+    </div>
+
+    <div class="results" id="results">
+      <h1>最終成績</h1>
+      <div id="resultList"></div>
+      <div id="summary" class="summary"></div>
+      <div class="note">
+        計算方法：自分の獲得メダル数 × 残り人数 － 他の人の獲得メダル合計。<br>
+        そのポイントに「1ポイント＝○円」を掛けて精算額を出します。<br>
+        負けの下限を設定した場合は、一番マイナスが大きい人が下限内に収まるように全員を同じ比率で調整します。<br>
+        表示は100円単位に丸め、全員の合計が必ず±0円になるように調整します。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function createPlayerInputs() {
+      const count = Number(document.getElementById("playerCount").value);
+      const playersDiv = document.getElementById("players");
+      playersDiv.innerHTML = "";
+
+      for (let i = 1; i <= count; i++) {
+        const row = document.createElement("div");
+        row.className = "player-row";
+        row.innerHTML = `
+          <div>
+            <div class="small-label">名前</div>
+            <input type="text" id="name${i}" value="プレイヤー${i}" />
+          </div>
+          <div>
+            <div class="small-label">メダル</div>
+            <input type="number" id="medal${i}" value="0" min="0" inputmode="numeric" />
+          </div>
+        `;
+        playersDiv.appendChild(row);
+      }
+
+      document.getElementById("results").style.display = "none";
+      document.getElementById("messageArea").style.display = "none";
+      document.getElementById("errorMessage").style.display = "none";
+    }
+
+    function calculateResults() {
+      try {
+        const count = Number(document.getElementById("playerCount").value);
+        const pointRate = Number(document.getElementById("pointRate").value);
+        const lossLimit = Number(document.getElementById("lossLimit").value);
+        const players = [];
+        let totalMedals = 0;
+
+        if (!Number.isFinite(pointRate) || pointRate < 0 || !Number.isFinite(lossLimit) || lossLimit < 0) {
+          showError();
+          return;
+        }
+
+        for (let i = 1; i <= count; i++) {
+          const name = document.getElementById(`name${i}`).value.trim();
+          const medals = Number(document.getElementById(`medal${i}`).value);
+
+          if (!name || !Number.isFinite(medals) || medals < 0) {
+            showError();
+            return;
+          }
+
+          players.push({ name, medals, score: 0, rank: 0, rawMoney: 0, adjustedScore: 0, finalMoney: 0 });
+          totalMedals += medals;
+        }
+
+        document.getElementById("errorMessage").style.display = "none";
+
+        players.forEach(player => {
+          player.score = player.medals * (count - 1) - (totalMedals - player.medals);
+          player.rawMoney = player.score * pointRate;
+        });
+
+        const adjustmentRate = getAdjustmentRate(players, lossLimit);
+        makeFinalMoney(players, pointRate, adjustmentRate);
+
+        const sorted = [...players].sort((a, b) => b.finalMoney - a.finalMoney || b.score - a.score);
+        setRanks(sorted);
+        showResults(sorted, pointRate, lossLimit, adjustmentRate);
+      } catch (e) {
+        console.error(e);
+        showError();
+      }
+    }
+
+    function showError() {
+      document.getElementById("errorMessage").style.display = "block";
+      document.getElementById("results").style.display = "none";
+      document.getElementById("messageArea").style.display = "none";
+    }
+
+    function getAdjustmentRate(players, lossLimit) {
+      const minMoney = Math.min(...players.map(player => player.rawMoney));
+      const maxLoss = Math.abs(Math.min(minMoney, 0));
+      if (lossLimit > 0 && maxLoss > lossLimit) {
+        return lossLimit / maxLoss;
+      }
+      return 1;
+    }
+
+    function roundToHundred(value) {
+      return Math.round(value / 100) * 100;
+    }
+
+    function makeFinalMoney(players, pointRate, adjustmentRate) {
+      players.forEach(player => {
+        player.adjustedScore = player.score * adjustmentRate;
+        player.adjustedMoney = player.adjustedScore * pointRate;
+        player.finalMoney = roundToHundred(player.adjustedMoney);
+      });
+
+      // 100円単位に丸めた後、合計が0円になるように100円ずつ調整
+      let total = players.reduce((sum, player) => sum + player.finalMoney, 0);
+      let guard = 0;
+      while (total !== 0 && guard < 1000) {
+        const step = total > 0 ? -100 : 100;
+        const candidates = [...players].sort((a, b) => {
+          const aGap = Math.abs((a.finalMoney + step) - a.adjustedMoney) - Math.abs(a.finalMoney - a.adjustedMoney);
+          const bGap = Math.abs((b.finalMoney + step) - b.adjustedMoney) - Math.abs(b.finalMoney - b.adjustedMoney);
+          return aGap - bGap;
+        });
+        candidates[0].finalMoney += step;
+        total = players.reduce((sum, player) => sum + player.finalMoney, 0);
+        guard++;
+      }
+    }
+
+    function setRanks(sorted) {
+      let currentRank = 1;
+      sorted.forEach((player, index) => {
+        if (index > 0 && player.finalMoney < sorted[index - 1].finalMoney) {
+          currentRank = index + 1;
+        }
+        player.rank = currentRank;
+      });
+    }
+
+    function formatYen(value) {
+      const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+      return `${sign}${Math.abs(value).toLocaleString()}円`;
+    }
+
+    function showResults(players, pointRate, lossLimit, adjustmentRate) {
+      const resultList = document.getElementById("resultList");
+      resultList.innerHTML = "";
+
+      const winner = players[0];
+      const loser = players[players.length - 1];
+      const messageArea = document.getElementById("messageArea");
+      const scrollMessage = document.getElementById("scrollMessage");
+
+      scrollMessage.textContent = `🎉 ${winner.name}さんおめでとうございます！　🏌️ ${loser.name}さん、次回はリベンジしましょう！`;
+      messageArea.style.display = "block";
+      scrollMessage.style.animation = "none";
+      void scrollMessage.offsetWidth;
+      scrollMessage.style.animation = "flowMessage 10s linear infinite";
+
+      players.forEach(player => {
+        const card = document.createElement("div");
+        card.className = "result-card";
+        if (player.rank === 1) card.classList.add("top");
+
+        const scoreClass = player.score < 0 ? "negative" : player.score > 0 ? "positive" : "";
+        const moneyClass = player.finalMoney < 0 ? "negative" : player.finalMoney > 0 ? "positive" : "";
+        const scoreText = player.score > 0 ? `+${player.score}` : `${player.score}`;
+        const adjustedScoreText = player.adjustedScore > 0 ? `+${player.adjustedScore.toFixed(2)}` : player.adjustedScore.toFixed(2);
+
+        card.innerHTML = `
+          <div class="rank">${player.rank}位</div>
+          <div>
+            <div class="name">${player.name}</div>
+            <div class="medals">獲得メダル：${player.medals}枚<br>元ポイント：${scoreText}pt<br>調整後：${adjustedScoreText}pt</div>
+            <div class="money ${moneyClass}">精算：${formatYen(player.finalMoney)}</div>
+          </div>
+          <div class="score ${scoreClass}">${scoreText}</div>
+        `;
+        resultList.appendChild(card);
+      });
+
+      const total = players.reduce((sum, player) => sum + player.finalMoney, 0);
+      const rateText = adjustmentRate < 1 ? `${adjustmentRate.toFixed(4)}倍に調整` : "調整なし";
+      document.getElementById("summary").innerHTML = `
+        1ポイント＝${pointRate.toLocaleString()}円 ／ 負けの下限＝${lossLimit.toLocaleString()}円 ／ ${rateText}<br>
+        精算額の合計：${formatYen(total)}
+      `;
+
+      document.getElementById("results").style.display = "block";
+      document.getElementById("messageArea").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function resetAll() {
+      document.getElementById("playerCount").value = "4";
+      document.getElementById("pointRate").value = "100";
+      document.getElementById("lossLimit").value = "0";
+      createPlayerInputs();
+    }
+
+    createPlayerInputs();
+  </script>
+</body>
+</html>
